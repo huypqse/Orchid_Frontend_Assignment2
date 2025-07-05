@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Table from 'react-bootstrap/Table';
 import Container from 'react-bootstrap/esm/Container';
-import { Button, Form, FormGroup, Image, Modal, Badge, Card } from 'react-bootstrap'
+import { Button, Form, FormGroup, Image, Modal, Badge, Card, Row, Col, Alert } from 'react-bootstrap'
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { Controller, useForm } from "react-hook-form";
@@ -118,7 +118,10 @@ export default function ListOfOrchids() {
         return (
             <Container className="mt-4">
                 <div className="text-center">
-                    <h4>Loading orchids...</h4>
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 className="mt-3">Loading orchids...</h4>
                 </div>
             </Container>
         );
@@ -127,9 +130,58 @@ export default function ListOfOrchids() {
     return (
         <Container className="mt-4">
             <Toaster/>
+            
+            {/* Header Section */}
+            <div className="mb-5">
+                <div className="text-center mb-4">
+                    <h1 className="text-primary fw-bold">Orchid Management</h1>
+                    <p className="lead text-muted">Manage your orchid inventory and product catalog</p>
+                </div>
+                
+                {/* Statistics Cards */}
+                <Row className="mb-4">
+                    <Col md={3} className="mb-3">
+                        <Card className="text-center border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                            <Card.Body className="p-3">
+                                <h3 className="mb-1">{orchids.length}</h3>
+                                <small>Total Orchids</small>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={3} className="mb-3">
+                        <Card className="text-center border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+                            <Card.Body className="p-3">
+                                <h3 className="mb-1">{orchids.filter(o => o.isNatural).length}</h3>
+                                <small>Natural Orchids</small>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={3} className="mb-3">
+                        <Card className="text-center border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
+                            <Card.Body className="p-3">
+                                <h3 className="mb-1">{orchids.filter(o => !o.isNatural).length}</h3>
+                                <small>Industry Orchids</small>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                    <Col md={3} className="mb-3">
+                        <Card className="text-center border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', color: 'white' }}>
+                            <Card.Body className="p-3">
+                                <h3 className="mb-1">${orchids.reduce((sum, o) => sum + (o.price || 0), 0).toFixed(2)}</h3>
+                                <small>Total Value</small>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
+
+            {/* Action Bar */}
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-primary">Manage Orchids</h2>
-                <Button onClick={handleShow} variant="primary" className="shadow-sm">
+                <div>
+                    <h2 className="text-primary mb-0">Product Catalog</h2>
+                    <small className="text-muted">Manage your orchid inventory</small>
+                </div>
+                <Button onClick={handleShow} variant="primary" className="shadow-sm px-4 py-2">
                     <i className="bi bi-plus-circle me-2"></i>
                     Add New Orchid
                 </Button>
@@ -137,83 +189,107 @@ export default function ListOfOrchids() {
 
             <Card className="shadow rounded custom-card mb-4">
               <Card.Body>
-                <Table striped bordered hover responsive className="custom-table align-middle">
-                    <thead className="table-dark">
-                        <tr>
-                            <th>Image</th>
-                            <th>Orchid Name</th>
-                            <th>Description</th>
-                            <th>Price</th>
-                            <th>Type</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {orchids.map((orchid) => (
-                            <tr key={orchid.orchidId}>
-                                <td>
-                                    <Image 
-                                        src={orchid.orchidUrl} 
-                                        width={60} 
-                                        height={60}
-                                        rounded
-                                        className="shadow-sm custom-image"
-                                        style={{ objectFit: 'cover' }}
-                                        onError={(e) => {
-                                            e.target.src = 'https://via.placeholder.com/60x60?text=Orchid';
-                                        }}
-                                    />
-                                </td>
-                                <td className="fw-bold">{orchid.orchidName}</td>
-                                <td className="text-muted">
-                                    {orchid.orchidDescription?.substring(0, 50)}
-                                    {orchid.orchidDescription?.length > 50 && '...'}
-                                </td>
-                                <td className="fw-bold text-primary">${orchid.price}</td>
-                                <td>
-                                    <Badge 
-                                        bg={orchid.isNatural ? "success" : "warning"}
-                                        className="custom-badge"
-                                    >
-                                        {orchid.isNatural ? "Natural" : "Industry"}
-                                    </Badge>
-                                </td>
-                                <td>
-                                    <div className="d-flex gap-2">
-                                        <Link to={`/edit/${orchid.orchidId}`}> 
-                                            <Button variant="outline-primary" size="sm" className="shadow-sm">
-                                                <i className="bi bi-pencil-square me-1"></i>
-                                                Edit
-                                            </Button>
-                                        </Link>
-                                        <Button 
-                                            variant="outline-danger" 
-                                            size="sm"
-                                            className="shadow-sm"
-                                            onClick={() => {
-                                                if (confirm("Are you sure you want to delete this orchid?")) {
-                                                    handleDelete(orchid.orchidId);
-                                                }
-                                            }}
-                                        >
-                                            <i className="bi bi-trash3 me-1"></i>
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </td>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 className="text-primary mb-0">Orchid Inventory</h5>
+                        <small className="text-muted">Showing {orchids.length} products</small>
+                    </div>
+                    <div className="text-muted">
+                        <i className="bi bi-clock-history me-2"></i>
+                        Last updated: {new Date().toLocaleString()}
+                    </div>
+                </div>
+                
+                {orchids.length === 0 ? (
+                    <div className="text-center py-5">
+                        <i className="bi bi-flower1 text-muted" style={{ fontSize: '4rem' }}></i>
+                        <h4 className="text-muted mt-3">No Orchids Available</h4>
+                        <p className="text-muted">Start building your catalog by adding your first orchid.</p>
+                        <Button onClick={handleShow} variant="primary" className="mt-2">
+                            <i className="bi bi-plus-circle me-2"></i>
+                            Add First Orchid
+                        </Button>
+                    </div>
+                ) : (
+                    <Table striped bordered hover responsive className="custom-table align-middle">
+                        <thead className="table-dark">
+                            <tr>
+                                <th>Product Image</th>
+                                <th>Product Name</th>
+                                <th>Description</th>
+                                <th>Price</th>
+                                <th>Category</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </Table>
+                        </thead>
+                        <tbody>
+                            {orchids.map((orchid) => (
+                                <tr key={orchid.orchidId}>
+                                    <td>
+                                        <Image 
+                                            src={orchid.orchidUrl} 
+                                            width={60} 
+                                            height={60}
+                                            rounded
+                                            className="shadow-sm custom-image"
+                                            style={{ objectFit: 'cover' }}
+                                            onError={(e) => {
+                                                e.target.src = 'https://via.placeholder.com/60x60?text=Orchid';
+                                            }}
+                                        />
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong className="text-primary">{orchid.orchidName}</strong>
+                                            <br />
+                                            <small className="text-muted">ID: {orchid.orchidId}</small>
+                                        </div>
+                                    </td>
+                                    <td className="text-muted">
+                                        {orchid.orchidDescription?.substring(0, 50)}
+                                        {orchid.orchidDescription?.length > 50 && '...'}
+                                    </td>
+                                    <td>
+                                        <strong className="text-success fs-5">${orchid.price}</strong>
+                                    </td>
+                                    <td>
+                                        <Badge 
+                                            bg={orchid.isNatural ? "success" : "warning"}
+                                            className="custom-badge fs-6"
+                                        >
+                                            {orchid.isNatural ? "Natural" : "Industry"}
+                                        </Badge>
+                                    </td>
+                                    <td>
+                                        <div className="d-flex gap-2">
+                                            <Link to={`/edit/${orchid.orchidId}`}> 
+                                                <Button variant="outline-primary" size="sm" className="shadow-sm">
+                                                    <i className="bi bi-pencil-square me-1"></i>
+                                                    Edit
+                                                </Button>
+                                            </Link>
+                                            <Button 
+                                                variant="outline-danger" 
+                                                size="sm"
+                                                className="shadow-sm"
+                                                onClick={() => {
+                                                    if (confirm("Are you sure you want to delete this orchid?")) {
+                                                        handleDelete(orchid.orchidId);
+                                                    }
+                                                }}
+                                            >
+                                                <i className="bi bi-trash3 me-1"></i>
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                )}
               </Card.Body>
             </Card>
-
-            {orchids.length === 0 && (
-                <div className="text-center mt-5">
-                    <h4 className="text-muted">No orchids available</h4>
-                    <p>Add your first orchid to get started.</p>
-                </div>
-            )}
 
             <Modal show={show} onHide={handleClose} backdrop="static" size="lg" className="custom-modal">
                 <Modal.Header closeButton>
